@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIMRS Harapan Sentosa — Portal Perawat</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#173B35">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SIMRS Harapan">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --ink:#1E2422;
+    --paper:#F7F5EF;
+    --panel:#FFFFFF;
+    --teal-900:#173B35;
+    --teal-700:#1F5C51;
+    --teal-500:#2C7A6B;
+    --sage-100:#E7EEE7;
+    --sage-200:#D7E3D6;
+    --line:#D9D3C4;
+    --clay:#B5502E;
+    --clay-100:#F3E3DA;
+    --amber:#9C7A22;
+    --amber-100:#F4ECD4;
+    --ok:#2C7A6B;
+    --ok-100:#E1EFE9;
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
+    --font-body: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: 'Courier New', Courier, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font-body);
+    min-height:100vh;
+  }
+  ::selection{background:var(--sage-200);}
+
+  /* ---------- LOGIN SCREEN ---------- */
+  #loginScreen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(44,122,107,0.10), transparent 45%),
+      radial-gradient(circle at 85% 80%, rgba(181,80,46,0.08), transparent 40%),
+      var(--paper);
+    padding:24px;
+  }
+  .login-wrap{
+    width:100%;
+    max-width:900px;
+    display:grid;
+    grid-template-columns:1.1fr 1fr;
+    background:var(--panel);
+    border:1px solid var(--line);
+    box-shadow:0 1px 0 rgba(0,0,0,0.03);
+  }
+  @media (max-width:720px){
+    .login-wrap{grid-template-columns:1fr;}
+  }
+  .login-left{
+    background:var(--teal-900);
+    color:#EFEDE3;
+    padding:44px 38px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    position:relative;
+    overflow:hidden;
+  }
+  .login-left::after{
+    content:"";
+    position:absolute;
+    right:-60px;top:-60px;
+    width:220px;height:220px;
+    border:1px solid rgba(239,237,227,0.14);
+    border-radius:50%;
+  }
+  .cross-mark{
+    width:34px;height:34px;
+    position:relative;
+    margin-bottom:26px;
+  }
+  .cross-mark::before,.cross-mark::after{
+    content:"";
+    position:absolute;
+    background:#EFEDE3;
+  }
+  .cross-mark::before{left:14px;top:0;width:6px;height:34px;}
+  .cross-mark::after{left:0;top:14px;width:34px;height:6px;}
+  .login-left h1{
+    font-family:var(--font-display);
+    font-size:28px;
+    line-height:1.25;
+    margin:0 0 6px;
+    font-weight:400;
+  }
+  .login-left p.tag{
+    margin:0;
+    color:#C9D6C7;
+    font-size:14px;
+    line-height:1.6;
+    max-width:32ch;
+  }
+  .login-left .meta{
+    font-size:12.5px;
+    color:#9FB5A5;
+    line-height:1.8;
+    border-top:1px solid rgba(239,237,227,0.16);
+    padding-top:16px;
+    margin-top:30px;
+  }
+  .login-right{
+    padding:44px 40px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+  .login-right h2{
+    font-family:var(--font-display);
+    font-weight:400;
+    font-size:21px;
+    margin:0 0 4px;
+  }
+  .login-right .sub{
+    font-size:13.5px;
+    color:#6B7268;
+    margin:0 0 26px;
+  }
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;
+    font-size:12.5px;
+    color:#565F58;
+    margin-bottom:6px;
+  }
+  .field input{
+    width:100%;
+    padding:11px 12px;
+    border:1px solid var(--line);
+    background:#FCFBF7;
+    font-size:14.5px;
+    color:var(--ink);
+    font-family:var(--font-body);
+  }
+  .field input:focus{
+    outline:none;
+    border-color:var(--teal-500);
+    background:#fff;
+  }
+  #loginBtn, #registerBtn{
+    width:100%;
+    padding:12px;
+    background:var(--teal-900);
+    color:#F3F1E8;
+    border:none;
+    font-size:14.5px;
+    letter-spacing:.2px;
+    cursor:pointer;
+    margin-top:8px;
+    transition:background .15s ease;
+  }
+  #loginBtn:hover, #registerBtn:hover{background:var(--teal-700);}
+  #loginBtn:disabled, #registerBtn:disabled{opacity:.6; cursor:default;}
+  .msg-box{
+    display:none;
+    margin-top:14px;
+    padding:10px 12px;
+    background:var(--clay-100);
+    color:#7A3116;
+    font-size:13px;
+    border-left:3px solid var(--clay);
+  }
+  .msg-box.ok{
+    background:var(--ok-100);
+    color:#1B4B3F;
+    border-left-color:var(--ok);
+  }
+  .hint{
+    margin-top:22px;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+    font-size:12px;
+    color:#8B8F84;
+    line-height:1.7;
+  }
+  .hint b{color:#5B6156;}
+
+  /* ---------- APP SHELL ---------- */
+  #app{display:none; min-height:100vh; grid-template-rows:auto 1fr;}
+  .topbar{
+    background:var(--teal-900);
+    color:#F0EEE3;
+    padding:0 24px;
+    height:60px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .topbar-left{display:flex; align-items:center; gap:12px;}
+  .topbar-left .cross-mark{width:22px;height:22px;margin:0;}
+  .topbar-left .cross-mark::before{left:9px;width:4px;height:22px;}
+  .topbar-left .cross-mark::after{top:9px;width:22px;height:4px;}
+  .topbar-title{font-family:var(--font-display); font-size:17px;}
+  .topbar-title small{display:block; font-size:10.5px; color:#9FB5A5; font-family:var(--font-body); letter-spacing:.3px;}
+  .topbar-right{display:flex; align-items:center; gap:16px;}
+  .nurse-chip{
+    text-align:right;
+    line-height:1.35;
+  }
+  .nurse-chip .name{font-size:13px; color:#F0EEE3;}
+  .nurse-chip .role{font-size:11px; color:#9FB5A5;}
+  #logoutBtn{
+    background:transparent;
+    border:1px solid rgba(240,238,227,0.3);
+    color:#F0EEE3;
+    padding:7px 14px;
+    font-size:12.5px;
+    cursor:pointer;
+  }
+  #logoutBtn:hover{background:rgba(240,238,227,0.08);}
+  #manageAccBtn{
+    background:transparent;
+    border:1px solid rgba(240,238,227,0.3);
+    color:#F0EEE3;
+    padding:7px 14px;
+    font-size:12.5px;
+    cursor:pointer;
+  }
+  #manageAccBtn:hover{background:rgba(240,238,227,0.08);}
+
+  .layout{
+    display:grid;
+    grid-template-columns:340px 1fr;
+    min-height:calc(100vh - 60px);
+  }
+  @media (max-width:860px){
+    .layout{grid-template-columns:1fr;}
+    .sidebar{max-height:340px;}
+  }
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    background:var(--panel);
+    border-right:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  .sidebar-head{
+    padding:16px 18px 12px;
+    border-bottom:1px solid var(--line);
+  }
+  .sidebar-head .count{
+    font-family:var(--font-display);
+    font-size:26px;
+    color:var(--teal-900);
+  }
+  .sidebar-head .count span{
+    font-family:var(--font-body);
+    font-size:12px;
+    color:#8B8F84;
+    margin-left:6px;
+  }
+  #searchInput{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    background:#FCFBF7;
+    font-size:13.5px;
+    margin-top:10px;
+  }
+  #searchInput:focus{outline:none; border-color:var(--teal-500);}
+  .filter-row{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    padding:12px 18px;
+    border-bottom:1px solid var(--line);
+  }
+  .filter-chip{
+    font-size:11px;
+    padding:5px 10px;
+    border:1px solid var(--line);
+    background:#FCFBF7;
+    color:#5B6156;
+    cursor:pointer;
+    user-select:none;
+  }
+  .filter-chip.active{
+    background:var(--teal-900);
+    color:#F0EEE3;
+    border-color:var(--teal-900);
+  }
+  .patient-list{
+    overflow-y:auto;
+    flex:1;
+  }
+  .p-item{
+    padding:12px 18px;
+    border-bottom:1px solid var(--line);
+    cursor:pointer;
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    align-items:flex-start;
+  }
+  .p-item:hover{background:var(--sage-100);}
+  .p-item.selected{background:var(--sage-100); box-shadow:inset 3px 0 0 var(--teal-700);}
+  .p-item .p-name{font-size:13.5px; color:var(--ink); font-weight:600;}
+  .p-item .p-diag{font-size:12px; color:#7A7F73; margin-top:2px; line-height:1.4;}
+  .p-item .p-sub{font-size:11px; color:#9BA096; margin-top:4px;}
+  .badge{
+    font-size:10px;
+    padding:3px 7px;
+    white-space:nowrap;
+    border:1px solid transparent;
+    flex-shrink:0;
+  }
+  .badge.Kritis{background:var(--clay-100); color:#7A3116; border-color:#E3B9A4;}
+  .badge.Observasi{background:var(--amber-100); color:#6E5410; border-color:#DFCB8F;}
+  .badge.Stabil{background:var(--ok-100); color:#1B4B3F; border-color:#B9D6C9;}
+  .badge.PreOperasi{background:#E9E4F2; color:#4A3B6B; border-color:#CBBEE0;}
+  .badge.PostOperasi{background:#E4EEF2; color:#2A5568; border-color:#B9D4E0;}
+
+  /* ---------- MAIN PANEL ---------- */
+  .main{
+    padding:28px 36px 60px;
+    overflow-y:auto;
+  }
+  .empty-state{
+    height:70vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    color:#9BA096;
+    text-align:center;
+  }
+  .empty-state .cross-mark{opacity:.25; margin-bottom:18px;}
+  .empty-state h3{font-family:var(--font-display); font-weight:400; color:#6B7268; margin:0 0 6px;}
+  .empty-state p{font-size:13.5px; max-width:32ch; margin:0;}
+
+  .chart{max-width:840px;}
+  .chart-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    border-bottom:2px solid var(--teal-900);
+    padding-bottom:16px;
+    margin-bottom:22px;
+  }
+  .chart-head h2{
+    font-family:var(--font-display);
+    font-weight:400;
+    font-size:26px;
+    margin:0 0 4px;
+    color:var(--teal-900);
+  }
+  .chart-head .id-line{font-size:13px; color:#6B7268;}
+  .chart-head .id-line b{color:var(--ink);}
+
+  .section-title{
+    font-size:11.5px;
+    letter-spacing:.3px;
+    color:var(--teal-700);
+    margin:26px 0 10px;
+    padding-bottom:6px;
+    border-bottom:1px solid var(--line);
+  }
+  .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:14px 24px;}
+  @media (max-width:600px){.grid-2{grid-template-columns:1fr;}}
+  .kv{font-size:13.5px; line-height:1.5;}
+  .kv .k{color:#8B8F84; font-size:11.5px; display:block; margin-bottom:2px;}
+  .kv .v{color:var(--ink);}
+
+  .vitals-row{display:flex; flex-wrap:wrap; gap:10px;}
+  .vital{
+    background:#FCFBF7;
+    border:1px solid var(--line);
+    padding:10px 14px;
+    min-width:96px;
+  }
+  .vital .val{font-family:var(--font-display); font-size:19px; color:var(--teal-900);}
+  .vital .lbl{font-size:10.5px; color:#8B8F84; margin-top:2px;}
+
+  ul.symptom-list{margin:0; padding-left:18px; font-size:13.5px; line-height:1.9;}
+  ul.symptom-list li{color:#3A3F38;}
+
+  .status-pill{
+    display:inline-block;
+    font-size:12px;
+    padding:4px 12px;
+    border:1px solid var(--line);
+  }
+
+  textarea#nursingInput{
+    width:100%;
+    min-height:120px;
+    padding:12px;
+    border:1px solid var(--line);
+    background:#FCFBF7;
+    font-family:var(--font-body);
+    font-size:13.5px;
+    line-height:1.6;
+    resize:vertical;
+  }
+  textarea#nursingInput:focus{outline:none; border-color:var(--teal-500);}
+  .save-row{display:flex; align-items:center; gap:12px; margin-top:10px;}
+  #saveNoteBtn{
+    background:var(--teal-900);
+    color:#F0EEE3;
+    border:none;
+    padding:9px 18px;
+    font-size:13px;
+    cursor:pointer;
+  }
+  #saveNoteBtn:hover{background:var(--teal-700);}
+  .save-flag{font-size:12px; color:var(--teal-700); opacity:0; transition:opacity .3s;}
+
+  .key-toggle{
+    margin-top:8px;
+    font-size:12.5px;
+    color:var(--teal-700);
+    cursor:pointer;
+    display:inline-block;
+    border-bottom:1px dotted var(--teal-700);
+  }
+  .answer-box{
+    display:none;
+    margin-top:12px;
+    background:var(--sage-100);
+    border-left:3px solid var(--teal-700);
+    padding:14px 16px;
+  }
+  .answer-box.show{display:block;}
+  .answer-box .dx{
+    font-size:13.5px;
+    margin-bottom:10px;
+  }
+  .answer-box .dx:last-child{margin-bottom:0;}
+  .answer-box .dx b{color:var(--teal-900);}
+  .answer-box .dx .rasional{color:#5B6156; font-size:12.5px; display:block; margin-top:2px;}
+
+  /* ---------- ADD PATIENT BUTTON ---------- */
+  #addPatientBtn{
+    width:100%;
+    margin-top:10px;
+    padding:9px 10px;
+    background:var(--sage-100);
+    border:1px dashed var(--teal-700);
+    color:var(--teal-900);
+    font-size:12.5px;
+    cursor:pointer;
+  }
+  #addPatientBtn:hover{background:var(--sage-200);}
+  .custom-tag{
+    font-size:9.5px;
+    color:var(--teal-700);
+    border:1px solid var(--sage-200);
+    background:var(--sage-100);
+    padding:1px 5px;
+    margin-left:6px;
+    vertical-align:1px;
+  }
+  .del-custom{
+    font-size:11px;
+    color:var(--clay);
+    cursor:pointer;
+    border-bottom:1px dotted var(--clay);
+    display:inline-block;
+    margin-top:8px;
+  }
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(23,59,53,0.45);
+    z-index:50;
+    align-items:flex-start;
+    justify-content:center;
+    padding:36px 16px;
+    overflow-y:auto;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    background:var(--panel);
+    width:100%;
+    max-width:640px;
+    border:1px solid var(--line);
+    max-height:calc(100vh - 72px);
+    display:flex;
+    flex-direction:column;
+  }
+  .modal-head{
+    padding:18px 22px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .modal-head h3{font-family:var(--font-display); font-weight:400; font-size:19px; margin:0; color:var(--teal-900);}
+  .modal-close{background:none; border:none; font-size:18px; color:#8B8F84; cursor:pointer; line-height:1;}
+  .modal-body{padding:20px 22px; overflow-y:auto;}
+  .modal-foot{padding:16px 22px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:10px;}
+  .form-row{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;}
+  @media (max-width:520px){.form-row{grid-template-columns:1fr;}}
+  .form-field label{display:block; font-size:12px; color:#565F58; margin-bottom:5px;}
+  .form-field input, .form-field select, .form-field textarea{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    background:#FCFBF7;
+    font-size:13.5px;
+    font-family:var(--font-body);
+  }
+  .form-field input:focus, .form-field select:focus, .form-field textarea:focus{outline:none; border-color:var(--teal-500);}
+  .form-field textarea{min-height:70px; resize:vertical;}
+  .form-hint{font-size:11.5px; color:#9BA096; margin-top:4px;}
+  #cancelAddBtn{
+    background:transparent; border:1px solid var(--line); color:#5B6156; padding:9px 16px; font-size:13px; cursor:pointer;
+  }
+  #submitAddBtn{
+    background:var(--teal-900); border:none; color:#F0EEE3; padding:9px 18px; font-size:13px; cursor:pointer;
+  }
+  #submitAddBtn:hover{background:var(--teal-700);}
+  .form-err{
+    display:none;
+    background:var(--clay-100); color:#7A3116; border-left:3px solid var(--clay);
+    padding:9px 12px; font-size:12.5px; margin-bottom:14px;
+  }
+
+  /* ---------- CHECKLIST HARIAN ---------- */
+  .checklist-toolbar{
+    display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap;
+  }
+  .day-nav-btn{
+    background:#FCFBF7; border:1px solid var(--line); color:var(--teal-900);
+    width:30px; height:30px; cursor:pointer; font-size:14px; line-height:1;
+  }
+  .day-nav-btn:hover{background:var(--sage-100);}
+  #chartDateInput{
+    border:1px solid var(--line); background:#FCFBF7; padding:7px 10px; font-size:13px; font-family:var(--font-body);
+  }
+  .checklist-progress{
+    font-size:12.5px; color:var(--teal-700); margin-left:auto;
+  }
+  .progress-track{
+    width:100%; height:6px; background:var(--sage-200); margin-bottom:16px; overflow:hidden;
+  }
+  .progress-fill{height:100%; background:var(--teal-700); transition:width .25s ease;}
+  .care-list{display:flex; flex-direction:column; gap:0; border-top:1px solid var(--line);}
+  .care-item{
+    display:flex; align-items:flex-start; gap:10px;
+    padding:10px 2px;
+    border-bottom:1px solid var(--line);
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  .care-item input{margin-top:3px; cursor:pointer;}
+  .care-item.checked span{color:#8B8F84; text-decoration:line-through;}
+  .care-item .domain{
+    font-size:10px; color:var(--teal-700); display:block; letter-spacing:.2px; margin-bottom:1px;
+  }
+
+  /* ---------- MANAJEMEN AKUN ---------- */
+  .acc-list{border-top:1px solid var(--line); margin-bottom:20px;}
+  .acc-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 2px; border-bottom:1px solid var(--line); font-size:13px;
+  }
+  .acc-row .acc-name{color:var(--ink);}
+  .acc-row .acc-user{font-size:11.5px; color:#8B8F84; display:block; margin-top:1px;}
+  .acc-row .acc-builtin{
+    font-size:10px; color:var(--teal-700); border:1px solid var(--sage-200); background:var(--sage-100);
+    padding:1px 6px; margin-left:6px;
+  }
+  .acc-del{font-size:12px; color:var(--clay); cursor:pointer; border-bottom:1px dotted var(--clay);}
+  .acc-toggle{font-size:12px; color:var(--teal-700); cursor:pointer; border-bottom:1px dotted var(--teal-700); background:none; border-top:none; border-left:none; border-right:none; padding:0; font-family:var(--font-body);}
+  .modal-subhead{font-size:11.5px; letter-spacing:.3px; color:var(--teal-700); margin:0 0 8px;}
+</style>
+</head>
+<body>
+
+<!-- ======================= LOGIN SCREEN ======================= -->
+<div id="loginScreen">
+  <div class="login-wrap">
+    <div class="login-left">
+      <div>
+        <div class="cross-mark"></div>
+        <h1>SIMRS<br>Harapan Sentosa</h1>
+        <p class="tag">Sistem Informasi Manajemen Rumah Sakit — Portal Akses Perawat Ruangan.</p>
+      </div>
+      <div class="meta">
+        Simulasi ini dibuat untuk latihan pengkajian &amp; diagnosa keperawatan.<br>
+        Seluruh data pasien bersifat fiktif. Data akun &amp; catatan tersimpan permanen di database.
+      </div>
+    </div>
+    <div class="login-right">
+
+      <div id="loginFormBlock">
+        <h2>Masuk ke Portal</h2>
+        <p class="sub">Gunakan kredensial staf keperawatan Anda.</p>
+        <div class="field">
+          <label for="userInput">ID Pengguna</label>
+          <input id="userInput" type="text" autocomplete="off" placeholder="mis. NsDaffa03">
+        </div>
+        <div class="field">
+          <label for="passInput">Kata Sandi</label>
+          <input id="passInput" type="password" autocomplete="off" placeholder="••••••••••••••">
+        </div>
+        <button id="loginBtn" onclick="tryLogin()">Masuk</button>
+        <div id="loginErr" class="msg-box">ID pengguna atau kata sandi salah. Silakan coba lagi.</div>
+        <div class="hint">
+          Belum punya akun? <span class="key-toggle" onclick="showRegister()">Daftar sebagai perawat baru</span>
+        </div>
+      </div>
+
+      <div id="registerFormBlock" style="display:none;">
+        <h2>Daftar Akun Perawat</h2>
+        <p class="sub">Buat akun untuk mengakses portal ini.</p>
+        <div class="field">
+          <label for="r_name">Nama Lengkap (dengan gelar)</label>
+          <input id="r_name" type="text" placeholder="mis. Ns. Putri Wulandari, S.Kep.">
+        </div>
+        <div class="field">
+          <label for="r_role">Jabatan / Peran</label>
+          <input id="r_role" type="text" placeholder="mis. Perawat Ruangan Interna">
+        </div>
+        <div class="field">
+          <label for="r_user">ID Pengguna</label>
+          <input id="r_user" type="text" placeholder="mis. NsPutri01" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="r_pass">Kata Sandi</label>
+          <input id="r_pass" type="password" placeholder="minimal 6 karakter" autocomplete="off">
+        </div>
+        <button id="registerBtn" onclick="tryRegister()">Daftar</button>
+        <div id="registerErr" class="msg-box"></div>
+        <div class="hint">
+          Sudah punya akun? <span class="key-toggle" onclick="showLogin()">Masuk di sini</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ======================= APP SHELL ======================= -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="cross-mark"></div>
+      <div class="topbar-title">SIMRS Harapan Sentosa<small>Ruang Rawat Inap Interna &amp; Bedah</small></div>
+    </div>
+    <div class="topbar-right">
+      <div class="nurse-chip">
+        <div class="name" id="topbarName">—</div>
+        <div class="role" id="topbarRole">—</div>
+      </div>
+      <button id="manageAccBtn" onclick="openAccountModal()">Kelola Akun</button>
+      <button id="logoutBtn" onclick="logout()">Keluar</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-head">
+        <div class="count" id="patientCount">0 <span>pasien dirawat</span></div>
+        <input id="searchInput" type="text" placeholder="Cari nama / diagnosis / kamar..." oninput="renderList()">
+        <button id="addPatientBtn" onclick="openAddModal()">+ Tambah Pasien Baru</button>
+      </div>
+      <div class="filter-row" id="filterRow"></div>
+      <div class="patient-list" id="patientList"></div>
+    </div>
+
+    <div class="main" id="mainPanel">
+      <div class="empty-state">
+        <div class="cross-mark"></div>
+        <h3>Belum ada pasien dipilih</h3>
+        <p>Pilih salah satu pasien di daftar sebelah kiri untuk membuka rekam medisnya.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= MODAL KELOLA AKUN PERAWAT ======================= -->
+<div class="modal-overlay" id="accountModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Kelola Akun Perawat</h3>
+      <button class="modal-close" onclick="closeAccountModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-subhead">AKUN TERDAFTAR</div>
+      <div class="acc-list" id="accList"></div>
+      <p style="font-size:12px;color:#8B8F84;margin-top:4px;line-height:1.7;">
+        Untuk menambah perawat baru, minta mereka mendaftar sendiri lewat halaman login ("Daftar sebagai perawat baru"). Setelah terdaftar, akun mereka akan otomatis muncul di daftar ini dan Anda dapat menjadikannya admin bila perlu.
+      </p>
+    </div>
+    <div class="modal-foot">
+      <button id="cancelAddBtn" onclick="closeAccountModal()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= MODAL TAMBAH PASIEN ======================= -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Tambah Pasien Baru</h3>
+      <button class="modal-close" onclick="closeAddModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-err" id="formErr">Mohon lengkapi nama, diagnosis, dan keluhan utama.</div>
+
+      <div class="form-row">
+        <div class="form-field"><label>Nama Pasien</label><input id="f_name" type="text" placeholder="mis. Bpk. Ahmad Yani"></div>
+        <div class="form-field"><label>Usia</label><input id="f_age" type="number" min="0" placeholder="mis. 45"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>Jenis Kelamin</label>
+          <select id="f_gender"><option>Laki-laki</option><option>Perempuan</option></select>
+        </div>
+        <div class="form-field"><label>Kamar / Ruang</label><input id="f_room" type="text" placeholder="mis. Interna 210"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>Status</label>
+          <select id="f_status">
+            <option value="Kritis">Kritis</option>
+            <option value="Observasi" selected>Observasi</option>
+            <option value="Stabil">Stabil</option>
+            <option value="PreOperasi">Pre-Operasi</option>
+            <option value="PostOperasi">Post-Operasi</option>
+          </select>
+        </div>
+        <div class="form-field"><label>Tanggal Masuk</label><input id="f_admit" type="text" placeholder="mis. 01 Sep 2026"></div>
+      </div>
+
+      <div class="form-field" style="margin-bottom:14px;">
+        <label>Diagnosis Medis</label>
+        <input id="f_diagnosis" type="text" placeholder="mis. Diabetes Melitus Tipe 2">
+      </div>
+      <div class="form-field" style="margin-bottom:14px;">
+        <label>Keluhan Utama</label>
+        <textarea id="f_complaint" placeholder="Keluhan yang membawa pasien dirawat..."></textarea>
+      </div>
+      <div class="form-field" style="margin-bottom:14px;">
+        <label>Tanda &amp; Gejala (satu poin per baris)</label>
+        <textarea id="f_symptoms" placeholder="Nyeri perut kanan atas&#10;Mual dan muntah&#10;Demam ringan"></textarea>
+        <div class="form-hint">Tulis tiap gejala di baris baru.</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field"><label>Tekanan Darah</label><input id="f_td" type="text" placeholder="120/80 mmHg"></div>
+        <div class="form-field"><label>Nadi</label><input id="f_n" type="text" placeholder="88 x/mnt"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>Respirasi</label><input id="f_rr" type="text" placeholder="20 x/mnt"></div>
+        <div class="form-field"><label>Suhu</label><input id="f_s" type="text" placeholder="36.8 °C"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>SpO₂</label><input id="f_spo2" type="text" placeholder="98%"></div>
+        <div class="form-field"><label>Alergi</label><input id="f_allergy" type="text" placeholder="Tidak ada alergi obat diketahui"></div>
+      </div>
+
+      <div class="form-field" style="margin-bottom:14px;">
+        <label>Terapi &amp; Intervensi Medis Berjalan</label>
+        <textarea id="f_therapy" placeholder="Obat, cairan, tindakan yang sedang berjalan..."></textarea>
+      </div>
+      <div class="form-field">
+        <label>Referensi Diagnosa Keperawatan (opsional — untuk kunci jawaban)</label>
+        <textarea id="f_dx" placeholder="Judul Diagnosa || alasan/rasional singkat&#10;Judul Diagnosa Lain || rasional"></textarea>
+        <div class="form-hint">Satu diagnosa per baris, pisahkan judul dan rasional dengan tanda || . Boleh dikosongkan.</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button id="cancelAddBtn" onclick="closeAddModal()">Batal</button>
+      <button id="submitAddBtn" onclick="submitAddPatient()">Simpan Pasien</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ======================= SUPABASE CLIENT ======================= */
+const SUPABASE_URL = 'https://aldgbhhjtmfzldkafptb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_kbxXhsKFBhhLT3VSB-Z3Gg_hSuh17bf';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* Username -> alamat email internal (Supabase Auth wajib pakai email) */
+function usernameToEmail(u){
+  return `simrs.harapansentosa.${u.trim().toLowerCase().replace(/[^a-z0-9._-]/g,'')}@gmail.com`;
+}
+
+let currentUser = null;   // { id, username, fullName, role, isAdmin }
+let allProfiles = [];     // cache daftar akun untuk modal Kelola Akun
+
+function isMainAccount(){ return !!(currentUser && currentUser.isAdmin); }
+function applyRolePermissions(){
+  const addPatientBtn = document.getElementById('addPatientBtn');
+  const manageAccBtn = document.getElementById('manageAccBtn');
+  if(addPatientBtn) addPatientBtn.style.display = isMainAccount() ? 'block' : 'none';
+  if(manageAccBtn) manageAccBtn.style.display = 'inline-block'; // semua bisa lihat daftar akun, hanya admin bisa ubah
+}
+
+function showRegister(){
+  document.getElementById('loginFormBlock').style.display = 'none';
+  document.getElementById('registerFormBlock').style.display = 'block';
+}
+function showLogin(){
+  document.getElementById('registerFormBlock').style.display = 'none';
+  document.getElementById('loginFormBlock').style.display = 'block';
+}
+
+function setMsg(id, text, ok){
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'msg-box' + (ok ? ' ok' : '') + (text ? ' show' : '');
+  el.style.display = text ? 'block' : 'none';
+}
+
+/* ---------- LOGIN ---------- */
+async function tryLogin(){
+  const u = document.getElementById('userInput').value.trim();
+  const p = document.getElementById('passInput').value;
+  const btn = document.getElementById('loginBtn');
+  if(!u || !p){ setMsg('loginErr', 'Mohon isi ID pengguna dan kata sandi.'); return; }
+
+  btn.disabled = true; btn.textContent = 'Memeriksa...';
+  const { data, error } = await sb.auth.signInWithPassword({ email: usernameToEmail(u), password: p });
+  btn.disabled = false; btn.textContent = 'Masuk';
+
+  if(error){
+    setMsg('loginErr', 'ID pengguna atau kata sandi salah. Silakan coba lagi.');
+    return;
+  }
+  setMsg('loginErr', '');
+  await afterLogin(data.user);
+}
+document.getElementById('passInput').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
+document.getElementById('userInput').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
+
+/* ---------- REGISTRASI ---------- */
+async function tryRegister(){
+  const name = document.getElementById('r_name').value.trim();
+  const role = document.getElementById('r_role').value.trim() || 'Perawat Ruangan';
+  const user = document.getElementById('r_user').value.trim();
+  const pass = document.getElementById('r_pass').value;
+  const btn = document.getElementById('registerBtn');
+
+  if(!name || !user || !pass){
+    setMsg('registerErr', 'Lengkapi nama, ID pengguna, dan kata sandi.');
+    return;
+  }
+  if(pass.length < 6){
+    setMsg('registerErr', 'Kata sandi minimal 6 karakter.');
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Mendaftarkan...';
+  const { data, error } = await sb.auth.signUp({
+    email: usernameToEmail(user),
+    password: pass,
+    options: { data: { full_name: name } }
+  });
+  btn.disabled = false; btn.textContent = 'Daftar';
+
+  if(error){
+    setMsg('registerErr', error.message.includes('registered') || error.message.includes('exists')
+      ? 'ID pengguna sudah terdaftar. Gunakan ID lain atau langsung masuk.'
+      : 'Gagal mendaftar: ' + error.message);
+    return;
+  }
+
+  // Perbarui jabatan/peran di tabel profiles (trigger sudah membuat baris dasarnya)
+  if(data.user){
+    await sb.from('profiles').update({ role_title: role }).eq('id', data.user.id);
+  }
+
+  if(data.session){
+    setMsg('registerErr', '');
+    await afterLogin(data.user);
+  } else {
+    setMsg('registerErr', 'Pendaftaran berhasil. Silakan masuk menggunakan ID dan kata sandi Anda.', true);
+    showLogin();
+  }
+}
+
+async function afterLogin(user){
+  const { data: profile, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  if(error || !profile){
+    setMsg('loginErr', 'Akun ditemukan tetapi profil belum siap. Coba muat ulang halaman.');
+    return;
+  }
+  currentUser = {
+    id: user.id,
+    username: user.email.split('@')[0],
+    fullName: profile.full_name,
+    role: profile.role_title,
+    isAdmin: profile.is_admin
+  };
+  document.getElementById('topbarName').textContent = currentUser.fullName;
+  document.getElementById('topbarRole').textContent = currentUser.role;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'grid';
+  applyRolePermissions();
+  await loadAllData();
+  renderFilters();
+  renderList();
+}
+
+async function logout(){
+  await sb.auth.signOut();
+  currentUser = null;
+  selectedId = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('userInput').value = '';
+  document.getElementById('passInput').value = '';
+  showLogin();
+}
+
+/* Coba pulihkan sesi bila sebelumnya sudah login (mis. setelah reload / buka lagi PWA) */
+async function initSession(){
+  const { data: { session } } = await sb.auth.getSession();
+  if(session && session.user){
+    await afterLogin(session.user);
+  }
+}
+initSession();
+
+/* ---------- Modal Kelola Akun ---------- */
+async function renderAccountList(){
+  const { data, error } = await sb.from('profiles').select('*').order('created_at');
+  allProfiles = data || [];
+  const list = document.getElementById('accList');
+  if(error){
+    list.innerHTML = `<div style="padding:10px 2px;color:#8B8F84;font-size:13px;">Gagal memuat daftar akun.</div>`;
+    return;
+  }
+  list.innerHTML = allProfiles.map(a=>`
+    <div class="acc-row">
+      <div>
+        <span class="acc-name">${a.full_name}${a.is_admin?'<span class="acc-builtin">Admin</span>':''}${a.id===currentUser.id?' <span style="color:#9BA096;font-size:11px;">(Anda)</span>':''}</span>
+        <span class="acc-user">${a.role_title}</span>
+      </div>
+      ${isMainAccount() ? `<button class="acc-toggle" onclick="toggleAdmin('${a.id}', ${!a.is_admin})">${a.is_admin ? 'Cabut Admin' : 'Jadikan Admin'}</button>` : ''}
+    </div>
+  `).join('');
+}
+function openAccountModal(){
+  renderAccountList();
+  document.getElementById('accountModal').classList.add('show');
+}
+function closeAccountModal(){
+  document.getElementById('accountModal').classList.remove('show');
+}
+async function toggleAdmin(id, makeAdmin){
+  if(!isMainAccount()) return;
+  const { error } = await sb.from('profiles').update({ is_admin: makeAdmin }).eq('id', id);
+  if(error){ alert('Gagal mengubah status admin: ' + error.message); return; }
+  await renderAccountList();
+}
+
+/* ======================= DATA PASIEN / CATATAN / CHECKLIST (Supabase) ======================= */
+let patients = [];         // seluruh pasien dari tabel `patients`
+let userNotes = {};        // { patientId: "teks" } dari tabel `nursing_notes`
+let checklistData = {};    // { "patientId_YYYY-MM-DD": [indeks item yang sudah dicentang] } dari `care_checklist`
+
+async function loadAllData(){
+  await Promise.all([ loadPatients(), loadNotes(), loadChecklist() ]);
+}
+
+async function loadPatients(){
+  const { data, error } = await sb.from('patients').select('*').order('id');
+  if(error){ console.error('Gagal memuat pasien', error); patients = []; return; }
+  patients = (data || []).map(row => ({
+    id: row.id,
+    name: row.name,
+    age: row.age,
+    gender: row.gender,
+    room: row.room,
+    status: row.status,
+    diagnosis: row.diagnosis,
+    admit: row.admit_date,
+    complaint: row.complaint,
+    symptoms: row.symptoms || [],
+    vitals: row.vitals || {},
+    allergy: row.allergy,
+    therapy: row.therapy,
+    dx: row.dx || [],
+    isBuiltin: row.is_builtin
+  }));
+}
+
+async function loadNotes(){
+  const { data, error } = await sb.from('nursing_notes').select('*');
+  userNotes = {};
+  if(error){ console.error('Gagal memuat catatan', error); return; }
+  (data || []).forEach(r => { userNotes[r.patient_id] = r.note; });
+}
+
+async function loadChecklist(){
+  const { data, error } = await sb.from('care_checklist').select('*');
+  checklistData = {};
+  if(error){ console.error('Gagal memuat checklist', error); return; }
+  (data || []).forEach(r => {
+    const key = `${r.patient_id}_${r.care_date}`;
+    if(!checklistData[key]) checklistData[key] = [];
+    checklistData[key].push(r.item_index);
+  });
+}
+
+function getAllPatients(){ return patients; }
+
+/* Daftar standar tindakan asuhan keperawatan harian — mencakup domain pemantauan,
+   keselamatan, kenyamanan, edukasi, dan psikososial. Berlaku digunakan lintas kasus,
+   dicentang setiap hari sesuai kondisi pasien saat itu. */
+const CARE_ITEMS = [
+  {domain:"Pemantauan", text:"Monitor tanda-tanda vital (TD, nadi, RR, suhu, SpO₂)"},
+  {domain:"Pemantauan", text:"Kaji tingkat nyeri menggunakan skala nyeri"},
+  {domain:"Pemantauan", text:"Kaji tingkat kesadaran (GCS) dan status neurologis"},
+  {domain:"Pemantauan", text:"Monitor balance cairan (intake dan output)"},
+  {domain:"Pemantauan", text:"Monitor tanda-tanda infeksi (kemerahan, bengkak, pus, demam)"},
+  {domain:"Terapi", text:"Berikan terapi oksigen sesuai kebutuhan dan monitor efektivitasnya"},
+  {domain:"Terapi", text:"Berikan obat sesuai instruksi dan prinsip 6 benar pemberian obat"},
+  {domain:"Terapi", text:"Monitor efek samping / respons pasien terhadap obat"},
+  {domain:"Perawatan Fisik", text:"Bantu pemenuhan kebutuhan ADL (mandi, berpakaian, makan)"},
+  {domain:"Perawatan Fisik", text:"Reposisi / miring kanan-kiri tiap 2 jam (cegah dekubitus)"},
+  {domain:"Perawatan Fisik", text:"Bantu mobilisasi / ambulasi bertahap"},
+  {domain:"Perawatan Fisik", text:"Kaji dan rawat luka / insisi bila ada"},
+  {domain:"Nutrisi & Eliminasi", text:"Kaji status nutrisi dan bantu pemenuhan diet"},
+  {domain:"Nutrisi & Eliminasi", text:"Monitor pola eliminasi (BAK / BAB)"},
+  {domain:"Keselamatan", text:"Kaji risiko jatuh dan pastikan pengaman tempat tidur terpasang"},
+  {domain:"Keselamatan", text:"Terapkan kewaspadaan standar (cuci tangan sebelum & sesudah tindakan)"},
+  {domain:"Edukasi", text:"Edukasi pasien dan keluarga tentang kondisi / penyakit"},
+  {domain:"Edukasi", text:"Edukasi tentang pengobatan, dosis, dan efek samping"},
+  {domain:"Psikososial", text:"Kaji tingkat kecemasan dan berikan dukungan psikososial"},
+  {domain:"Psikososial", text:"Libatkan keluarga dalam proses perawatan"},
+  {domain:"Kolaborasi", text:"Kolaborasi dengan tim medis (dokter, ahli gizi, fisioterapi)"},
+  {domain:"Kolaborasi", text:"Persiapan discharge planning bila kondisi mulai membaik"},
+  {domain:"Dokumentasi", text:"Evaluasi respons pasien terhadap intervensi yang diberikan"},
+  {domain:"Dokumentasi", text:"Dokumentasikan perkembangan kondisi pasien pada rekam medis"}
+];
+
+function todayISO(){
+  const d = new Date();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+let currentChartDate = todayISO();
+
+/* ======================= RENDER SIDEBAR ======================= */
+let activeFilter = "Semua";
+let selectedId = null;
+
+const statusList = ["Semua","Kritis","Observasi","Stabil","PreOperasi","PostOperasi"];
+const statusLabel = {Semua:"Semua", Kritis:"Kritis", Observasi:"Observasi", Stabil:"Stabil", PreOperasi:"Pre-Op", PostOperasi:"Post-Op"};
+
+function renderFilters(){
+  const row = document.getElementById('filterRow');
+  row.innerHTML = statusList.map(s=>
+    `<div class="filter-chip ${s===activeFilter?'active':''}" onclick="setFilter('${s}')">${statusLabel[s]}</div>`
+  ).join('');
+}
+function setFilter(s){ activeFilter = s; renderFilters(); renderList(); }
+
+function renderList(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const container = document.getElementById('patientList');
+  let filtered = getAllPatients().filter(p=>{
+    const matchStatus = activeFilter === "Semua" || p.status === activeFilter;
+    const matchQuery = !q || p.name.toLowerCase().includes(q) || p.diagnosis.toLowerCase().includes(q) || p.room.toLowerCase().includes(q);
+    return matchStatus && matchQuery;
+  });
+  document.getElementById('patientCount').innerHTML = `${getAllPatients().length} <span>pasien dirawat</span>`;
+  if(filtered.length === 0){
+    container.innerHTML = `<div style="padding:24px 18px; color:#9BA096; font-size:13px;">Tidak ada pasien yang cocok dengan pencarian.</div>`;
+    return;
+  }
+  container.innerHTML = filtered.map(p=>`
+    <div class="p-item ${p.id===selectedId?'selected':''}" onclick="selectPatient(${p.id})">
+      <div>
+        <div class="p-name">${p.name}${!p.isBuiltin?'<span class="custom-tag">Tambahan</span>':''}</div>
+        <div class="p-diag">${p.diagnosis}</div>
+        <div class="p-sub">${p.room} · ${p.age} th · ${p.gender}</div>
+      </div>
+      <div class="badge ${p.status}">${statusLabel[p.status]}</div>
+    </div>
+  `).join('');
+}
+
+/* ======================= RENDER MAIN CHART ======================= */
+function selectPatient(id){
+  selectedId = id;
+  currentChartDate = todayISO();
+  renderList();
+  renderChart();
+}
+
+function renderChart(){
+  const p = getAllPatients().find(x=>x.id===selectedId);
+  const main = document.getElementById('mainPanel');
+  if(!p) return;
+
+  const vitalsHtml = Object.entries(p.vitals).map(([k,v])=>{
+    const labelMap = {td:"Tekanan Darah", n:"Nadi", rr:"Respirasi", s:"Suhu", spo2:"SpO₂"};
+    return `<div class="vital"><div class="val">${v}</div><div class="lbl">${labelMap[k]||k}</div></div>`;
+  }).join('');
+
+  const symptomsHtml = p.symptoms.map(s=>`<li>${s}</li>`).join('');
+
+  const dxHtml = (p.dx && p.dx.length)
+    ? p.dx.map(d=>`<div class="dx"><b>${d[0]}</b> ${d[1]}</div>`).join('')
+    : `<div class="dx" style="color:#8B8F84;">Belum ada referensi diagnosa keperawatan untuk pasien ini. Coba rumuskan sendiri berdasarkan data pengkajian di atas.</div>`;
+
+  const savedNote = userNotes[p.id] || "";
+
+  const checklistKey = `${p.id}_${currentChartDate}`;
+  const checkedIdx = checklistData[checklistKey] || [];
+  const careHtml = CARE_ITEMS.map((item,i)=>`
+    <label class="care-item ${checkedIdx.includes(i)?'checked':''}" id="care-${i}">
+      <input type="checkbox" ${checkedIdx.includes(i)?'checked':''} onchange="toggleCare(${i})">
+      <span><span class="domain">${item.domain}</span>${item.text}</span>
+    </label>
+  `).join('');
+  const progressPct = Math.round((checkedIdx.length / CARE_ITEMS.length) * 100);
+
+  const dateDisplay = new Date(currentChartDate+'T00:00:00').toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+
+  main.innerHTML = `
+    <div class="chart">
+      <div class="chart-head">
+        <div>
+          <h2>${p.name}</h2>
+          <div class="id-line"><b>${p.age} tahun</b> · ${p.gender} · Kamar ${p.room} · Masuk ${p.admit}</div>
+        </div>
+        <span class="status-pill badge ${p.status}">${statusLabel[p.status]}</span>
+      </div>
+
+      <div class="section-title">DIAGNOSIS MEDIS &amp; KELUHAN UTAMA</div>
+      <div class="grid-2">
+        <div class="kv"><span class="k">Diagnosis Medis</span><span class="v">${p.diagnosis}</span></div>
+        <div class="kv"><span class="k">Alergi</span><span class="v">${p.allergy}</span></div>
+      </div>
+      <div class="kv" style="margin-top:14px;"><span class="k">Keluhan Utama</span><span class="v">${p.complaint}</span></div>
+
+      <div class="section-title">TANDA VITAL</div>
+      <div class="vitals-row">${vitalsHtml}</div>
+
+      <div class="section-title">TANDA &amp; GEJALA (DATA PENGKAJIAN)</div>
+      <ul class="symptom-list">${symptomsHtml}</ul>
+
+      <div class="section-title">TERAPI &amp; INTERVENSI MEDIS BERJALAN</div>
+      <div class="kv"><span class="v">${p.therapy}</span></div>
+
+      <div class="section-title">CHECKLIST ASUHAN KEPERAWATAN HARIAN</div>
+      <div class="checklist-toolbar">
+        <button class="day-nav-btn" onclick="shiftDay(-1)">‹</button>
+        <input type="date" id="chartDateInput" value="${currentChartDate}" onchange="setChartDate(this.value)">
+        <button class="day-nav-btn" onclick="shiftDay(1)">›</button>
+        <span class="checklist-progress" id="checklistProgress">${checkedIdx.length}/${CARE_ITEMS.length} tindakan tercatat — ${dateDisplay}</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:${progressPct}%"></div></div>
+      <p style="font-size:12.5px; color:#7A7F73; margin:0 0 6px;">Centang tindakan asuhan keperawatan yang benar-benar Anda berikan pada pasien ini di tanggal terpilih. Riwayat tersimpan per hari.</p>
+      <div class="care-list">${careHtml}</div>
+
+      <div class="section-title">LATIHAN — RUMUSKAN DIAGNOSA KEPERAWATAN ANDA</div>
+      <p style="font-size:12.5px; color:#7A7F73; margin:-2px 0 10px;">Tulis diagnosa keperawatan (SDKI/NANDA) berdasarkan data pengkajian di atas, lalu bandingkan dengan kunci jawaban referensi.</p>
+      <textarea id="nursingInput" placeholder="Contoh: Pola Napas Tidak Efektif berhubungan dengan ... ditandai dengan ...">${savedNote}</textarea>
+      <div class="save-row">
+        <button id="saveNoteBtn" onclick="saveNote(${p.id})">Simpan Catatan</button>
+        <span class="save-flag" id="saveFlag">Tersimpan ✓</span>
+      </div>
+
+      <div class="key-toggle" onclick="toggleAnswer()">Lihat kunci jawaban referensi (untuk belajar mandiri)</div>
+      <div class="answer-box" id="answerBox">${dxHtml}</div>
+
+      ${(!p.isBuiltin && isMainAccount()) ? `<div class="del-custom" onclick="deleteCustomPatient(${p.id})">Hapus pasien tambahan ini</div>` : ''}
+    </div>
+  `;
+}
+
+async function toggleCare(i){
+  const key = `${selectedId}_${currentChartDate}`;
+  let arr = checklistData[key] || [];
+  const willCheck = !arr.includes(i);
+
+  // update tampilan dulu (optimistic), lalu simpan ke database
+  arr = willCheck ? arr.concat(i) : arr.filter(x=>x!==i);
+  checklistData[key] = arr;
+  const el = document.getElementById(`care-${i}`);
+  if(el) el.classList.toggle('checked', willCheck);
+  const pct = Math.round((arr.length / CARE_ITEMS.length) * 100);
+  const fillEl = document.getElementById('progressFill');
+  if(fillEl) fillEl.style.width = pct + '%';
+  const dateDisplay = new Date(currentChartDate+'T00:00:00').toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  const progEl = document.getElementById('checklistProgress');
+  if(progEl) progEl.textContent = `${arr.length}/${CARE_ITEMS.length} tindakan tercatat — ${dateDisplay}`;
+
+  if(willCheck){
+    const { error } = await sb.from('care_checklist').upsert({
+      patient_id: selectedId, care_date: currentChartDate, item_index: i,
+      checked: true, checked_by: currentUser.id, checked_at: new Date().toISOString()
+    });
+    if(error) console.error('Gagal menyimpan checklist', error);
+  } else {
+    const { error } = await sb.from('care_checklist').delete()
+      .match({ patient_id: selectedId, care_date: currentChartDate, item_index: i });
+    if(error) console.error('Gagal menghapus checklist', error);
+  }
+}
+
+function shiftDay(delta){
+  const d = new Date(currentChartDate+'T00:00:00');
+  d.setDate(d.getDate()+delta);
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  currentChartDate = `${d.getFullYear()}-${m}-${day}`;
+  renderChart();
+}
+function setChartDate(val){
+  currentChartDate = val;
+  renderChart();
+}
+
+async function saveNote(id){
+  const text = document.getElementById('nursingInput').value;
+  userNotes[id] = text;
+  const { error } = await sb.from('nursing_notes').upsert({
+    patient_id: id, note: text, updated_by: currentUser.id, updated_at: new Date().toISOString()
+  });
+  if(error){ console.error('Gagal menyimpan catatan', error); alert('Gagal menyimpan catatan ke database.'); return; }
+  const flag = document.getElementById('saveFlag');
+  flag.style.opacity = 1;
+  setTimeout(()=>{ flag.style.opacity = 0; }, 1800);
+}
+
+function toggleAnswer(){
+  document.getElementById('answerBox').classList.toggle('show');
+}
+
+/* ======================= TAMBAH PASIEN ======================= */
+function openAddModal(){
+  if(!isMainAccount()){ return; }
+  document.getElementById('formErr').style.display = 'none';
+  ['f_name','f_age','f_room','f_admit','f_diagnosis','f_complaint','f_symptoms','f_td','f_n','f_rr','f_s','f_spo2','f_allergy','f_therapy','f_dx']
+    .forEach(id=>document.getElementById(id).value = '');
+  document.getElementById('f_gender').value = 'Laki-laki';
+  document.getElementById('f_status').value = 'Observasi';
+  document.getElementById('addModal').classList.add('show');
+}
+function closeAddModal(){
+  document.getElementById('addModal').classList.remove('show');
+}
+
+async function submitAddPatient(){
+  if(!isMainAccount()){ return; }
+  const name = document.getElementById('f_name').value.trim();
+  const diagnosis = document.getElementById('f_diagnosis').value.trim();
+  const complaint = document.getElementById('f_complaint').value.trim();
+  const err = document.getElementById('formErr');
+
+  if(!name || !diagnosis || !complaint){
+    err.style.display = 'block';
+    return;
+  }
+  err.style.display = 'none';
+
+  const symptomsRaw = document.getElementById('f_symptoms').value.trim();
+  const symptoms = symptomsRaw ? symptomsRaw.split('\n').map(s=>s.trim()).filter(Boolean) : ["Belum ada data gejala tercatat"];
+
+  const dxRaw = document.getElementById('f_dx').value.trim();
+  const dx = dxRaw ? dxRaw.split('\n').map(line=>{
+    const parts = line.split('||');
+    return [parts[0] ? parts[0].trim() : 'Diagnosa Keperawatan', parts[1] ? parts[1].trim() : ''];
+  }).filter(d=>d[0]) : [];
+
+  const newPatientRow = {
+    name: name,
+    age: Number(document.getElementById('f_age').value) || 0,
+    gender: document.getElementById('f_gender').value,
+    room: document.getElementById('f_room').value.trim() || "Belum ditentukan",
+    status: document.getElementById('f_status').value,
+    diagnosis: diagnosis,
+    admit_date: document.getElementById('f_admit').value.trim() || todayISO(),
+    complaint: complaint,
+    symptoms: symptoms,
+    vitals: {
+      td: document.getElementById('f_td').value.trim() || "-",
+      n: document.getElementById('f_n').value.trim() || "-",
+      rr: document.getElementById('f_rr').value.trim() || "-",
+      s: document.getElementById('f_s').value.trim() || "-",
+      spo2: document.getElementById('f_spo2').value.trim() || "-"
+    },
+    allergy: document.getElementById('f_allergy').value.trim() || "Tidak ada alergi obat diketahui",
+    therapy: document.getElementById('f_therapy').value.trim() || "Belum ada terapi tercatat",
+    dx: dx,
+    is_builtin: false,
+    created_by: currentUser.id
+  };
+
+  const { data, error } = await sb.from('patients').insert(newPatientRow).select().single();
+  if(error){
+    console.error('Gagal menyimpan pasien', error);
+    alert('Gagal menyimpan pasien ke database: ' + error.message);
+    return;
+  }
+
+  await loadPatients();
+  closeAddModal();
+  renderList();
+  selectPatient(data.id);
+}
+
+async function deleteCustomPatient(id){
+  if(!isMainAccount()){ return; }
+  const { error } = await sb.from('patients').delete().eq('id', id);
+  if(error){
+    console.error('Gagal menghapus pasien', error);
+    alert('Gagal menghapus pasien: ' + error.message);
+    return;
+  }
+  await loadPatients();
+  selectedId = null;
+  renderList();
+  document.getElementById('mainPanel').innerHTML = `
+    <div class="empty-state">
+      <div class="cross-mark"></div>
+      <h3>Pasien telah dihapus</h3>
+      <p>Pilih pasien lain di daftar sebelah kiri.</p>
+    </div>`;
+}
+
+/* ======================= PWA — SERVICE WORKER ======================= */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(err=>{
+      console.warn('Service worker gagal didaftarkan (normal jika dibuka langsung dari file lokal):', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
